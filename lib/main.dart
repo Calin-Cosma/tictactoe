@@ -1,113 +1,186 @@
 import 'package:flutter/material.dart';
+import 'package:preferences/preference_service.dart';
+import 'package:tictactoe/game.dart';
 
-void main() {
-  runApp(MyApp());
+void main() async {
+	WidgetsFlutterBinding.ensureInitialized();
+	await PrefService.init();
+	runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
+	@override
+	Widget build(BuildContext context) {
+		return MaterialApp(
+			title: 'Tic Tac Toe',
+			theme: ThemeData(
+				primarySwatch: Colors.blue,
+			),
+			home: MyHomePage(title: 'Tic Tac Toe'),
+		);
+	}
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+	MyHomePage({Key key, this.title}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
+	final String title;
+	String playerName = PrefService.getString('player.name');
+	int playerScore = 0;
+	int cpuScore = 0;
 
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
+	@override
+	_MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+	@override
+	Widget build(BuildContext context) {
+		return Scaffold(
+			appBar: AppBar(
+				title: Text(widget.title),
+			),
+			body: Center(
+				child: Column(
+					mainAxisAlignment: MainAxisAlignment.center,
+					crossAxisAlignment: CrossAxisAlignment.start,
+					children: <Widget>[
+						Row(
+							mainAxisAlignment: MainAxisAlignment.center,
+							children: [
+								Column(
+									mainAxisAlignment: MainAxisAlignment.start,
+									crossAxisAlignment: CrossAxisAlignment.center,
+									children: [
+										Padding(
+											padding: EdgeInsets.only(top: 32, bottom: 8),
+											child: Text(
+												'TIC TAC TOE',
+												style: TextStyle(
+														fontSize: 45, fontWeight: FontWeight.bold),
+											),
+										),
+										Padding(
+											padding: EdgeInsets.only(left: 100),
+											child: Text('Powered by Flutter'),
+										),
+									],
+								),
+							],
+						),
+						Expanded(
+							child: Center(
+								child: Column(
+									crossAxisAlignment: CrossAxisAlignment.stretch,
+									mainAxisAlignment: MainAxisAlignment.center,
+									children: [
+										Padding(
+											padding: EdgeInsets.only(left: 80, right: 80, bottom: 20),
+											child: Row(
+												mainAxisAlignment: MainAxisAlignment.spaceBetween,
+												children: [
+													Text(widget.playerName ?? 'You',
+															style: TextStyle(
+																	fontSize: 35, fontWeight: FontWeight.bold)),
+													Text('CPU',
+															style: TextStyle(
+																	fontSize: 35, fontWeight: FontWeight.bold)),
+												],
+											),
+										),
+										Padding(
+											padding: EdgeInsets.only(left: 40, right: 40),
+											child: Row(
+												mainAxisAlignment: MainAxisAlignment.spaceBetween,
+												children: [
+													Padding(
+														padding: EdgeInsets.only(left: 60),
+														child: Text('${widget.playerScore}',
+																style: TextStyle(
+																		fontSize: 35, fontWeight: FontWeight.bold)),
+													),
+													Text('-',
+															style: TextStyle(
+																	fontSize: 35, fontWeight: FontWeight.bold)),
+													Padding(
+														padding: EdgeInsets.only(right: 60),
+														child: Text('${widget.cpuScore}',
+																style: TextStyle(
+																		fontSize: 35, fontWeight: FontWeight.bold)),
+													)
+												],
+											),
+										),
+									],
+								),
+							),
+						),	
+					],
+				),
+			),
+			floatingActionButton: FloatingActionButton(
+				onPressed: _play,
+				tooltip: 'Play new game',
+				child: Icon(Icons.play_arrow),
+			),
+		);
+	}
 
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
+	void _play() async {
+		if (widget.playerName == null) {
+			var _username = await _showUsernameDialog();
+			if (_username != null) {
+				PrefService.setString('player.name', _username);
+				widget.playerName = _username;
+			}
+		}
+		
+		if (widget.playerName != null) {
+			final playerWon = await Navigator.push(
+				context,
+				MaterialPageRoute(builder: (context) => GameScreen(playerName: widget.playerName)),
+			);
+			setState(() {
+				if (playerWon != null)
+					if (playerWon)
+						widget.playerScore++;
+					else
+						widget.cpuScore++;
+				else {
+					widget.playerScore++;
+					widget.cpuScore++;
+				}
+			});
+		}
+	}
+	
+	
+	Future<String> _showUsernameDialog() async {
+		String _username = '';
+		await showDialog(
+			context: context,
+			builder: (BuildContext context) {
+				return AlertDialog(
+					title: new Text('What is your name ?'),
+					content: TextFormField(
+						initialValue: _username,
+						onChanged: (newValue) {
+							_username = newValue;
+						},
+					),
+					actions: <Widget>[
+						new FlatButton(
+							child: new Text('Save'),
+							onPressed: () {
+								Navigator.of(context).pop();
+							},
+						),
+					],
+				);
+			},
+		);
+		
+		return _username;
+	}
 }
