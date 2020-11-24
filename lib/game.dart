@@ -37,8 +37,8 @@ class GameScreenState extends State<GameScreen> {
 			),
 			body: Center(
 				child: Column(
-					mainAxisAlignment: MainAxisAlignment.center,
-					crossAxisAlignment: CrossAxisAlignment.start,
+					mainAxisAlignment: MainAxisAlignment.start,
+					crossAxisAlignment: CrossAxisAlignment.center,
 					children: <Widget>[
 						Row(
 							mainAxisAlignment: MainAxisAlignment.center,
@@ -78,17 +78,17 @@ class GameScreenState extends State<GameScreen> {
 														Padding(
 															padding: EdgeInsets.all(2),
 															child: InkWell(
-																child: new Container(
+																child: Container(
 																	width: 100.0,
 																	height: 100.0,
-																	decoration: new BoxDecoration(
+																	decoration: BoxDecoration(
 																		color: Colors.blueAccent,
-																		border: new Border.all(color: Colors.black, width: 2.0),
-																		borderRadius: new BorderRadius.circular(10.0),
+																		border: Border.all(color: Colors.black, width: 2.0),
+																		borderRadius: BorderRadius.circular(10.0),
 																	),
-																	child: new Center(
-																		child: new Text(values.elementAt(i).elementAt(j).value ?? '',
-																			style: new TextStyle(fontSize: 75.0, color: Colors.white),
+																	child: Center(
+																		child: Text(values.elementAt(i).elementAt(j).value ?? '',
+																			style: TextStyle(fontSize: 75.0, color: Colors.white),
 																		),
 																	),
 																),
@@ -166,7 +166,7 @@ class GameScreenState extends State<GameScreen> {
 						unpressedButtons.add(button);
 			
 			if (unpressedButtons.isNotEmpty) {
-				var button = unpressedButtons.elementAt(new Random().nextInt(unpressedButtons.length));
+				var button = unpressedButtons.elementAt(Random().nextInt(unpressedButtons.length));
 				setState(() {
 					button.value = 'O';
 				});

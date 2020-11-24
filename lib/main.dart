@@ -43,8 +43,8 @@ class _MyHomePageState extends State<MyHomePage> {
 			),
 			body: Center(
 				child: Column(
-					mainAxisAlignment: MainAxisAlignment.center,
-					crossAxisAlignment: CrossAxisAlignment.start,
+					mainAxisAlignment: MainAxisAlignment.start,
+					crossAxisAlignment: CrossAxisAlignment.center,
 					children: <Widget>[
 						Row(
 							mainAxisAlignment: MainAxisAlignment.center,
@@ -131,8 +131,10 @@ class _MyHomePageState extends State<MyHomePage> {
 		if (widget.playerName == null) {
 			var _username = await _showUsernameDialog();
 			if (_username != null) {
-				PrefService.setString('player.name', _username);
-				widget.playerName = _username;
+				setState(() {
+					PrefService.setString('player.name', _username);
+					widget.playerName = _username;
+				});
 			}
 		}
 		
@@ -162,7 +164,7 @@ class _MyHomePageState extends State<MyHomePage> {
 			context: context,
 			builder: (BuildContext context) {
 				return AlertDialog(
-					title: new Text('What is your name ?'),
+					title: Text('What is your name ?'),
 					content: TextFormField(
 						initialValue: _username,
 						onChanged: (newValue) {
@@ -170,8 +172,8 @@ class _MyHomePageState extends State<MyHomePage> {
 						},
 					),
 					actions: <Widget>[
-						new FlatButton(
-							child: new Text('Save'),
+						FlatButton(
+							child: Text('Save'),
 							onPressed: () {
 								Navigator.of(context).pop();
 							},
