@@ -1,0 +1,190 @@
+name: Cross-Platform Flutter Builds
+
+on:
+    workflow_dispatch:
+#    push:
+#        branches:
+#            - main
+#    pull_request:
+#        branches:
+#            - main
+
+jobs:
+    build:
+        name: Build
+        strategy:
+            matrix:
+                os: [macos-latest, windows-latest, ubuntu-latest]
+                arch: [arm64, x86_64]
+                include:
+                    - os: macos-latest
+                      arch: arm64
+                    - os: macos-latest
+                      arch: x86_64
+                    - os: windows-latest
+                      arch: x86_64
+                    - os: windows-latest
+                      arch: arm64
+                    - os: ubuntu-latest
+                      arch: x86_64
+        runs-on: ${{ matrix.os }}
+        outputs:
+            appVersion: ${{ steps.appVersion.outputs.appVersion }}
+            appVersionWin: ${{ steps.appVersionWin.outputs.appVersionWin }}
+        steps:
+            - name: Checkout Code
+              id: checkout
+              uses: actions/checkout@v4
+
+            - name: Set up Flutter
+              id: setupFlutter
+              uses: subosito/flutter-action@v2
+              with:
+                  channel: stable
+                  flutter-version: 3.29.3
+
+            - name: Install Dependencies
+              id: installDependencies
+              run: flutter pub get
+
+            - name: Extract App Version (Linux/macOS)
+              id: appVersion
+              if: matrix.os != 'windows-latest'
+              shell: bash
+              run: |
+                  APP_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //g' | tr -d '\r' | sed 's/+/-/g')
+                  echo "App version detected: $APP_VERSION"
+                  echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+                  echo "appVersion=$APP_VERSION" >> "$GITHUB_OUTPUT"
+
+            - name: Extract App Version (Windows)
+              id: appVersionWin
+              if: matrix.os == 'windows-latest'
+              shell: powershell
+              run: |
+                  $version = (Get-Content pubspec.yaml | Select-String '^version:' | ForEach-Object { $_ -replace 'version: ', '' } | ForEach-Object { $_ -replace '\+', '-' }).Trim()
+                  echo "App version detected: $version"
+                  echo "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+                  echo "appVersionWin=$version" >> "$GITHUB_OUTPUT"
+
+            - name: Build Application
+              id: buildMacLinux
+              env:
+                  ARCH: ${{ matrix.arch }}
+              shell: bash
+              run: |
+                  if [ "${{ matrix.os }}" == "macos-latest" ]; then
+                      if [ "${{ matrix.arch }}" == "arm64" ]; then
+                          echo "Building for macOS arm64"
+                          export ARCHFLAGS="-arch arm64"
+                          flutter build macos --dart-define=ARCH=arm64
+                      else
+                          echo "Building for macOS x86_64"
+                          export ARCHFLAGS="-arch x86_64"
+                          flutter build macos --dart-define=ARCH=x86_64
+                      fi
+                  elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+                      echo "Building for Linux x64"
+                      sudo apt update
+                      sudo apt install -y \
+                          clang \
+                          cmake \
+                          ninja-build \
+                          pkg-config \
+                          libgtk-3-dev \
+                          libglib2.0-dev \
+                          libsecret-1-dev \
+                          liblzma-dev
+                      flutter build linux
+                  fi
+
+            - name: Build Application (Windows)
+              id: buildWin
+              if: matrix.os == 'windows-latest'
+              run: |
+                  Write-Output "Building for Windows $env:ARCH"
+                  flutter build windows
+              shell: powershell
+
+            - name: Upload Artifacts (macOS arm64)
+              id: uploadMacArm
+              if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: macos-arm64-build-${{ env.APP_VERSION }}
+                  path: |
+                      build/macos/Build/Products/Release/*.app
+
+            - name: Upload Artifacts (macOS x64)
+              id: uploadMac64
+              if: matrix.os == 'macos-latest' && matrix.arch == 'x86_64'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: macos-x64-build-${{ env.APP_VERSION }}
+                  path: |
+                      build/macos/Build/Products/Release/*.app
+
+            - name: Upload Artifacts (Windows x64)
+              id: uploadWin64
+              if: matrix.os == 'windows-latest' && matrix.arch == 'x86_64'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: windows-x64-build-${{ env.APP_VERSION }}
+                  path: |
+                      build/windows/x64/runner/Release/*.exe
+
+            - name: Upload Artifacts (Windows arm64)
+              id: uploadWinArm
+              if: matrix.os == 'windows-latest' && matrix.arch == 'arm64'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: windows-arm64-build-${{ env.APP_VERSION }}
+                  path: |
+                      build/windows/x64/runner/Release/*.exe
+
+            - name: Upload Artifacts (Linux x64)
+              id: uploadLinux
+              if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x86_64'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: linux-x64-build-${{ env.APP_VERSION }}
+                  path: |
+                      build/linux/x64/release/bundle/
+                    
+
+    release:
+        name: Release
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - env:
+                appVersion: ${{needs.build.outputs.appVersion}}
+                appVersionWin: ${{needs.build.outputs.appVersionWin}}
+              run: echo "appVersion=$appVersion ; appVersionWin = $appVersionWin"
+
+            - name: Download all artifacts
+              id: downloadArtifacts
+              uses: actions/download-artifact@v4
+
+            - name: List artifacts
+              id: listArtifacts
+              run: ls -R
+
+            - name: Copy Artifacts to Public Release Repository
+              id: releaseArtifacts
+              env:
+                  REPO_URL: "https://github.com/Calin-Cosma/unclone-releases.git"
+                  GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
+                  APP_VERSION: ${{ env.APP_VERSION }}
+              run: |
+                  git config --global user.name "github-actions"
+                  git config --global user.email "github-actions@github.com"
+                  git clone --depth 1 $REPO_URL release_repo
+                  cd release_repo
+                  git remote set-url origin https://${{ secrets.RELEASE_PAT }}@github.com/Calin-Cosma/unclone-releases.git
+                  git pull origin main --rebase
+                  mkdir -p releases/${APP_VERSION}
+                  cp * releases/${APP_VERSION}/
+                  git add .
+                  git commit -m "Release $APP_VERSION" || echo "No changes to commit"
+                  git push origin main
