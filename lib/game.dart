@@ -7,7 +7,7 @@ class GameScreen extends StatefulWidget {
 	
 	String playerName;
 	
-	GameScreen({@required this.playerName}) :
+	GameScreen({required this.playerName}) :
 			assert(playerName != null);
 	
 	@override
@@ -17,7 +17,7 @@ class GameScreen extends StatefulWidget {
 
 class GameScreenState extends State<GameScreen> {
 	
-	String winner;
+	String? winner;
 	String message = 'Your turn';
 	String buttonMessage = 'Give up now !';
 	
@@ -125,7 +125,7 @@ class GameScreenState extends State<GameScreen> {
 													),
 												),
 												
-												RaisedButton(
+												ElevatedButton(
 													child: Padding(
 														padding: EdgeInsets.only(top: 4, bottom: 4, left: 16, right: 16),
 														child: Text(
@@ -135,7 +135,15 @@ class GameScreenState extends State<GameScreen> {
 															),
 														),
 													),
-													color: Colors.blue,
+													style: ElevatedButton.styleFrom(
+														backgroundColor: Colors.blue,
+														foregroundColor: Colors.white,
+														// side: BorderSide(color: Colors.yellow, width: 5),
+														textStyle: const TextStyle(
+																color: Colors.white,
+																// fontSize: 25, fontStyle: FontStyle.normal
+														),
+													),
 													onPressed: () {
 														if (winner == null || winner == 'O')
 															Navigator.pop(context, false);
@@ -193,7 +201,7 @@ class GameScreenState extends State<GameScreen> {
 		}
 	}
 	
-	String getWinner() {
+	String? getWinner() {
 		for (int i = 0; i < 3; i++) {
 			if (values.elementAt(i).elementAt(0).value == values.elementAt(i).elementAt(1).value
 					&& values.elementAt(i).elementAt(0).value == values.elementAt(i).elementAt(2).value)
@@ -219,6 +227,6 @@ class GameScreenState extends State<GameScreen> {
 
 
 class ButtonValue {
-	String value;
+	String? value;
 }
 
