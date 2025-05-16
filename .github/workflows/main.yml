@@ -89,6 +89,8 @@ jobs:
                       BUILD_DIR="build/macos/Build/Products/Release"
                       DMG_DIR="releases"
                       DMG_FILE="${APP_NAME}-${VERSION}.dmg"
+                  
+                      mkdir -p $DMG_DIR
                       
                       echo "APP_NAME=$APP_NAME"
                       echo "VERSION=$VERSION"
@@ -97,11 +99,9 @@ jobs:
                       echo "DMG_FILE=$DMG_FILE"
                   
                       ls -l "$BUILD_DIR"
-                  
                       ls -l "$DMG_DIR"
                       
                       
-                      mkdir -p $DMG_DIR
                       hdiutil create -volname "$APP_NAME" -srcfolder "$BUILD_DIR/${APP_NAME}.app" -ov -format UDZO "$DMG_DIR/$DMG_FILE"
                   elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
                       echo "Building for Linux x64"
