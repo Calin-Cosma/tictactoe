@@ -87,7 +87,6 @@ jobs:
                       APP_NAME="unClone"
                       VERSION=${{ env.APP_VERSION }}
                       BUILD_DIR="build/macos/Build/Products/Release"
-#                      DMG_DIR="releases/${VERSION}"
                       DMG_DIR="releases"
                       DMG_FILE="${APP_NAME}-${VERSION}.dmg"
                       
