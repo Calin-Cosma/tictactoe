@@ -194,7 +194,7 @@ jobs:
                   git remote set-url origin https://${{ secrets.RELEASE_PAT }}@github.com/Calin-Cosma/unclone-releases.git
                   git pull origin main --rebase
                   mkdir -p releases/${APP_VERSION}
-                  cp * releases/${APP_VERSION}/
+                  cp -r * releases/${APP_VERSION}/
                   git add .
                   git commit -m "Release $APP_VERSION" || echo "No changes to commit"
                   git push origin main
