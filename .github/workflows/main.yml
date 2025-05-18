@@ -9,6 +9,9 @@ on:
 #        branches:
 #            - main
 
+env:
+    APP_NAME: "tictactoe"
+
 jobs:
     build:
         name: Build
@@ -84,11 +87,11 @@ jobs:
                           flutter build macos --dart-define=ARCH=x86_64
                       fi
                   
-                      APP_NAME="tictactoe"
+                      APP_NAME=${{ env.APP_NAME }}
                       VERSION=${{ env.APP_VERSION }}
                       BUILD_DIR="build/macos/Build/Products/Release"
                       DMG_DIR="releases"
-                      DMG_FILE="${APP_NAME}-${VERSION}.dmg"
+                      DMG_FILE="${APP_NAME}-macos-${ARCH}-${VERSION}.dmg"
                   
                       mkdir -p $DMG_DIR
                       
@@ -106,14 +109,28 @@ jobs:
                           libsecret-1-dev \
                           liblzma-dev
                       flutter build linux
+                  
+                      
                   fi
 
             - name: Build Application (Windows)
               id: buildWin
               if: matrix.os == 'windows-latest'
+              env:
+                  ARCH: ${{ matrix.arch }}
               run: |
                   Write-Output "Building for Windows $env:ARCH"
                   flutter build windows
+                  $buildDir = "build/windows/x64/runner/Release"
+                  $exeFile = "$buildDir/$env:APP_NAME.exe"
+                  $newFileName = "$buildDir/$env:APP_NAME-win-$env:ARCH-$env:VERSION.exe"
+    
+                  if (Test-Path $exeFile) {
+                      Rename-Item -Path $exeFile -NewName $newFileName
+                      echo "Renamed $exeFile to $newFileName"
+                  } else {
+                      throw "Executable not found: $exeFile"
+                  }
               shell: powershell
 
             - name: Upload Artifacts (macOS arm64)
