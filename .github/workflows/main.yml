@@ -112,6 +112,7 @@ jobs:
                       elif [ "${{ matrix.arch }}" == "arm64" ]; then
                           flutter build linux --target-platform linux-arm64
                           BUILD_DIR="build/linux/arm64/release/bundle"
+                      fi
                   
                       APPIMAGE_DIR="releases/${{ env.APP_VERSION }}"
                       APPIMAGE_FILE="${{ env.APP_NAME }}-linux-${{ env.ARCH }}-${{ env.APP_VERSION }}.AppImage"
