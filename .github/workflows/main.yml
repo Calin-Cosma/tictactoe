@@ -121,6 +121,7 @@ jobs:
                       
                       mkdir -p AppDir/usr/bin
                       cp -r $BUILD_DIR/* AppDir/usr/bin/
+                      cp $BUILD_DIR/data/flutter_assets/assets/icons/app_icon.png AppDir/app_icon.png
                       echo "[Desktop Entry]
                   Name=${{ env.APP_NAME }}
                   Exec=${{ env.APP_NAME }}
