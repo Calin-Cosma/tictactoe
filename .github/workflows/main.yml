@@ -87,15 +87,13 @@ jobs:
                           flutter build macos --dart-define=ARCH=x86_64
                       fi
                   
-                      APP_NAME=${{ env.APP_NAME }}
-                      VERSION=${{ env.APP_VERSION }}
                       BUILD_DIR="build/macos/Build/Products/Release"
                       DMG_DIR="releases"
-                      DMG_FILE="${APP_NAME}-macos-${ARCH}-${VERSION}.dmg"
+                      DMG_FILE="${{ env.APP_NAME }}-macos-${{ env.ARCH }}-${{ env.APP_VERSION }}.dmg"
                   
                       mkdir -p $DMG_DIR
                       
-                      hdiutil create -volname "$APP_NAME" -srcfolder "$BUILD_DIR/${APP_NAME}.app" -ov -format UDZO "$DMG_DIR/$DMG_FILE"
+                      hdiutil create -volname "${{ env.APP_NAME }}" -srcfolder "$BUILD_DIR/${{ env.APP_NAME }}.app" -ov -format UDZO "$DMG_DIR/$DMG_FILE"
                   elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
                       echo "Building for Linux x64"
                       sudo apt update
@@ -108,9 +106,31 @@ jobs:
                           libglib2.0-dev \
                           libsecret-1-dev \
                           liblzma-dev
-                      flutter build linux
+                      if [ "${{ matrix.arch }}" == "x86_64" ]; then
+                          flutter build linux --target-platform linux-x64
+                          BUILD_DIR="build/linux/x64/release/bundle"
+                      elif [ "${{ matrix.arch }}" == "arm64" ]; then
+                          flutter build linux --target-platform linux-arm64
+                          BUILD_DIR="build/linux/arm64/release/bundle"
                   
+                      APPIMAGE_DIR="releases/${{ env.APP_VERSION }}"
+                      APPIMAGE_FILE="${{ env.APP_NAME }}-linux-${{ env.ARCH }}-${{ env.APP_VERSION }}.AppImage"
                       
+                      mkdir -p $APPIMAGE_DIR
+                      wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+                      chmod +x appimagetool-x86_64.AppImage
+                      
+                      # Create the AppDir structure
+                      mkdir -p AppDir/usr/bin
+                      cp -r $BUILD_DIR/* AppDir/usr/bin/
+                      echo "[Desktop Entry]
+                      Name=${{ env.APP_NAME }}
+                      Exec=${{ env.APP_NAME }}
+                      Icon=${{ env.APP_NAME }}
+                      Type=Application
+                      Categories=Utility;" > AppDir/${{ env.APP_NAME }}.desktop
+                      
+                      ./appimagetool-x86_64.AppImage AppDir "$APPIMAGE_DIR/$APPIMAGE_FILE"
                   fi
 
             - name: Build Application (Windows)
@@ -133,6 +153,8 @@ jobs:
                   }
               shell: powershell
 
+
+
             - name: Upload Artifacts (macOS arm64)
               id: uploadMacArm
               if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
@@ -140,7 +162,7 @@ jobs:
               with:
                   name: macos-arm64-build-${{ env.APP_VERSION }}
                   path: |
-                      releases/*.dmg
+                      releases/${{ env.APP_NAME }}-macos-arm64-${{ env.APP_VERSION }}.dmg
 
             - name: Upload Artifacts (macOS x64)
               id: uploadMac64
@@ -149,16 +171,8 @@ jobs:
               with:
                   name: macos-x64-build-${{ env.APP_VERSION }}
                   path: |
-                      releases/*.dmg
+                      releases/${{ env.APP_NAME }}-macos-x86_64-${{ env.APP_VERSION }}.dmg
 
-            - name: Upload Artifacts (Windows x64)
-              id: uploadWin64
-              if: matrix.os == 'windows-latest' && matrix.arch == 'x86_64'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: windows-x64-build-${{ env.APP_VERSION }}
-                  path: |
-                      build/windows/x64/runner/Release/*.exe
 
             - name: Upload Artifacts (Windows arm64)
               id: uploadWinArm
@@ -167,7 +181,25 @@ jobs:
               with:
                   name: windows-arm64-build-${{ env.APP_VERSION }}
                   path: |
-                      build/windows/x64/runner/Release/*.exe
+                      build/windows/x64/runner/Release/${{ env.APP_NAME }}-macos-arm64-${{ env.APP_VERSION }}.exe
+
+            - name: Upload Artifacts (Windows x64)
+              id: uploadWin64
+              if: matrix.os == 'windows-latest' && matrix.arch == 'x86_64'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: windows-x64-build-${{ env.APP_VERSION }}
+                  path: |
+                      build/windows/x64/runner/Release/${{ env.APP_NAME }}-macos-x86_64-${{ env.APP_VERSION }}.exe
+
+
+            - name: Upload Artifacts (Linux arm64)
+              if: matrix.os == 'ubuntu-latest' && matrix.arch == 'arm64'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: linux-arm64-build-${{ env.APP_VERSION }}
+                  path: |
+                      build/linux/arm64/release/bundle/${{ env.APP_NAME }}-linux-arm64-${{ env.APP_VERSION }}.AppImage
 
             - name: Upload Artifacts (Linux x64)
               id: uploadLinux
@@ -176,7 +208,7 @@ jobs:
               with:
                   name: linux-x64-build-${{ env.APP_VERSION }}
                   path: |
-                      build/linux/x64/release/bundle/
+                      build/linux/x64/release/bundle/${{ env.APP_NAME }}-linux-x86_64-${{ env.APP_VERSION }}.AppImage
                     
 
     release:
@@ -197,6 +229,14 @@ jobs:
               id: listArtifacts
               run: ls -R
 
+            - name: Extract Artifacts
+              run: |
+                  mkdir -p extracted_artifacts
+                  for artifact in ../*.zip; do
+                      unzip -o "$artifact" -d extracted_artifacts/
+                  done
+                  ls -l extracted_artifacts/
+
             - name: Copy Artifacts to Public Release Repository
               id: releaseArtifacts
               env:
@@ -211,7 +251,7 @@ jobs:
                   git remote set-url origin https://${{ secrets.RELEASE_PAT }}@github.com/Calin-Cosma/unclone-releases.git
                   git pull origin main --rebase
                   mkdir -p releases/${APP_VERSION}
-                  cp -r * releases/${APP_VERSION}/
+                  cp -r extracted_artifacts/* releases/${APP_VERSION}/
                   git add .
                   git commit -m "Release $APP_VERSION" || echo "No changes to commit"
                   git push origin main
