@@ -160,6 +160,11 @@ jobs:
                   $buildDir = "build/windows/x64/runner/Release"
                   $exeFile = "$buildDir/$env:APP_NAME.exe"
                   $newFileName = "$buildDir/$env:APP_NAME-win-$env:ARCH-$env:VERSION.exe"
+                  
+                  echo "dir $buildDir"
+                  dir "$buildDir"
+                  echo "dir $buildDir/$env:APP_NAME.exe"
+                  dir "$buildDir/$env:APP_NAME.exe"
     
                   if (Test-Path $exeFile) {
                       Rename-Item -Path $exeFile -NewName $newFileName
