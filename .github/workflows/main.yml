@@ -121,8 +121,8 @@ jobs:
                       
                       mkdir -p AppDir/usr/bin
                       cp -r $BUILD_DIR/* AppDir/usr/bin/
-                      echo "[Desktop Entry]\nName=${{ env.APP_NAME }}\nExec=${{ env.APP_NAME }}\nIcon=${{ env.APP_NAME }}\nType=Application\nCategories=Utility;" > AppDir/${{ env.APP_NAME }}.desktop
-                      echo "[Desktop Entry]\nName=${{ env.APP_NAME }}\nExec=${{ env.APP_NAME }}\nIcon=${{ env.APP_NAME }}\nType=Application\nCategories=Utility;"
+                      echo "[Desktop Entry]\rName=${{ env.APP_NAME }}\rExec=${{ env.APP_NAME }}\rIcon=${{ env.APP_NAME }}\rType=Application\rCategories=Utility;" > AppDir/${{ env.APP_NAME }}.desktop
+                      echo "[Desktop Entry]\rName=${{ env.APP_NAME }}\rExec=${{ env.APP_NAME }}\rIcon=${{ env.APP_NAME }}\rType=Application\rCategories=Utility;"
                       cat AppDir/${{ env.APP_NAME }}.desktop
                       echo "------------------------------"
                       
