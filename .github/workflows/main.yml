@@ -124,7 +124,7 @@ jobs:
                       echo "[Desktop Entry]
                   Name=${{ env.APP_NAME }}
                   Exec=${{ env.APP_NAME }}
-                  Icon=${{ env.APP_NAME }}
+                  Icon=application-default-icon
                   Type=Application
                   Categories=Utility;" > AppDir/${{ env.APP_NAME }}.desktop
                       cat AppDir/${{ env.APP_NAME }}.desktop
