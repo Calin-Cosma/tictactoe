@@ -167,6 +167,7 @@ jobs:
                   dir "$buildDir/$env:APP_NAME.exe"
     
                   if (Test-Path $exeFile) {
+                      echo "Renaming $exeFile to $newFileName"
                       Rename-Item -Path $exeFile -NewName $newFileName
                       echo "Renamed $exeFile to $newFileName"
                   } else {
