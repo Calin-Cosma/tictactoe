@@ -17,7 +17,7 @@ jobs:
         name: Build
         strategy:
             matrix:
-                os: [macos-latest, windows-latest, ubuntu-latest]
+                os: [ubuntu-latest]
                 arch: [arm64, x86_64]
                 include:
                     - os: macos-latest
