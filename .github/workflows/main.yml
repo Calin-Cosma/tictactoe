@@ -110,39 +110,39 @@ jobs:
                       if [ "${{ matrix.arch }}" == "x86_64" ]; then
                           flutter build linux --target-platform linux-x64
                           BUILD_DIR="build/linux/x64/release/bundle"
-                      fi
                   
-                      APPIMAGE_DIR="releases/${{ env.APP_VERSION }}"
-                      APPIMAGE_FILE="${{ env.APP_NAME }}-linux-${{ env.ARCH }}-${{ env.APP_VERSION }}.AppImage"
-                      
-                      mkdir -p $APPIMAGE_DIR
-                      wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
-                      chmod +x appimagetool-x86_64.AppImage
-                      
-                      echo "ls -l build/linux/x64/release/bundle"
-                      ls -l build/linux/x64/release/bundle
-                      echo "ls -l build/linux/x64/release/bundle/data"
-                      ls -l build/linux/x64/release/bundle/data
-                      echo "ls -l build/linux/x64/release/bundle/data/flutter_assets"
-                      ls -l build/linux/x64/release/bundle/data/flutter_assets
-                      echo "ls -l build/linux/x64/release/bundle/data/flutter_assets/assets"
-                      ls -l build/linux/x64/release/bundle/data/flutter_assets/assets
-                      echo "ls -l build/linux/x64/release/bundle/data/flutter_assets/assets/icons"
-                      ls -l build/linux/x64/release/bundle/data/flutter_assets/assets/icons
-                      
-                      mkdir -p AppDir/usr/bin
-                      cp -r $BUILD_DIR/* AppDir/usr/bin/
-                      cp $BUILD_DIR/data/flutter_assets/assets/icons/app_icon.png AppDir/app_icon.png
-                      echo "[Desktop Entry]
-                  Name=${{ env.APP_NAME }}
-                  Exec=${{ env.APP_NAME }}
-                  Icon=app_icon
-                  Type=Application
-                  Categories=Utility;" > AppDir/${{ env.APP_NAME }}.desktop
-                      cat AppDir/${{ env.APP_NAME }}.desktop
-                      echo "------------------------------"
-                      
-                      ./appimagetool-x86_64.AppImage AppDir "$APPIMAGE_DIR/$APPIMAGE_FILE"
+                          APPIMAGE_DIR="releases/${{ env.APP_VERSION }}"
+                          APPIMAGE_FILE="${{ env.APP_NAME }}-linux-${{ env.ARCH }}-${{ env.APP_VERSION }}.AppImage"
+                          
+                          mkdir -p $APPIMAGE_DIR
+                          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+                          chmod +x appimagetool-x86_64.AppImage
+                          
+                          echo "ls -l build/linux/x64/release/bundle"
+                          ls -l build/linux/x64/release/bundle
+                          echo "ls -l build/linux/x64/release/bundle/data"
+                          ls -l build/linux/x64/release/bundle/data
+                          echo "ls -l build/linux/x64/release/bundle/data/flutter_assets"
+                          ls -l build/linux/x64/release/bundle/data/flutter_assets
+                          echo "ls -l build/linux/x64/release/bundle/data/flutter_assets/assets"
+                          ls -l build/linux/x64/release/bundle/data/flutter_assets/assets
+                          echo "ls -l build/linux/x64/release/bundle/data/flutter_assets/assets/icons"
+                          ls -l build/linux/x64/release/bundle/data/flutter_assets/assets/icons
+                          
+                          mkdir -p AppDir/usr/bin
+                          cp -r $BUILD_DIR/* AppDir/usr/bin/
+                          cp $BUILD_DIR/data/flutter_assets/assets/icons/app_icon.png AppDir/app_icon.png
+                          echo "[Desktop Entry]
+                      Name=${{ env.APP_NAME }}
+                      Exec=${{ env.APP_NAME }}
+                      Icon=app_icon
+                      Type=Application
+                      Categories=Utility;" > AppDir/${{ env.APP_NAME }}.desktop
+                          cat AppDir/${{ env.APP_NAME }}.desktop
+                          echo "------------------------------"
+                          
+                          ./appimagetool-x86_64.AppImage AppDir "$APPIMAGE_DIR/$APPIMAGE_FILE"
+                      fi
                   fi
 
             - name: Build Application (Windows)
