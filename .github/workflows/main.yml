@@ -122,6 +122,7 @@ jobs:
                       mkdir -p AppDir/usr/bin
                       cp -r $BUILD_DIR/* AppDir/usr/bin/
                       echo "[Desktop Entry]\nName=${{ env.APP_NAME }}\nExec=${{ env.APP_NAME }}\nIcon=${{ env.APP_NAME }}\nType=Application\nCategories=Utility;" > AppDir/${{ env.APP_NAME }}.desktop
+                      cat AppDir/${{ env.APP_NAME }}.desktop
                       
                       ./appimagetool-x86_64.AppImage AppDir "$APPIMAGE_DIR/$APPIMAGE_FILE"
                   fi
