@@ -119,6 +119,17 @@ jobs:
                       wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
                       chmod +x appimagetool-x86_64.AppImage
                       
+                      echo "ls -l build/linux/x64/release/bundle"
+                      ls -l build/linux/x64/release/bundle
+                      echo "ls -l build/linux/x64/release/bundle/data"
+                      ls -l build/linux/x64/release/bundle/data
+                      echo "ls -l build/linux/x64/release/bundle/data/flutter_assets"
+                      ls -l build/linux/x64/release/bundle/data/flutter_assets
+                      echo "ls -l build/linux/x64/release/bundle/data/flutter_assets/assets"
+                      ls -l build/linux/x64/release/bundle/data/flutter_assets/assets
+                      echo "ls -l build/linux/x64/release/bundle/data/flutter_assets/assets/icons"
+                      ls -l build/linux/x64/release/bundle/data/flutter_assets/assets/icons
+                      
                       mkdir -p AppDir/usr/bin
                       cp -r $BUILD_DIR/* AppDir/usr/bin/
                       cp $BUILD_DIR/data/flutter_assets/assets/icons/app_icon.png AppDir/app_icon.png
