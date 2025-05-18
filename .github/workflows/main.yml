@@ -120,10 +120,14 @@ jobs:
                           
                           echo "ls -l build/linux/x64/release/bundle"
                           ls -l build/linux/x64/release/bundle
+                          echo "ls -l build/linux/x64/release/bundle/tictactoe"
+                          ls -l build/linux/x64/release/bundle/tictactoe
                           echo "ls -l build/linux/x64/release/bundle/data"
                           ls -l build/linux/x64/release/bundle/data
                           echo "ls -l build/linux/x64/release/bundle/data/flutter_assets"
                           ls -l build/linux/x64/release/bundle/data/flutter_assets
+                          echo "ls -l build/linux/x64/release/bundle/data/flutter_assets/packages"
+                          ls -l build/linux/x64/release/bundle/data/flutter_assets/packages
                           echo "ls -l build/linux/x64/release/bundle/data/flutter_assets/assets"
                           ls -l build/linux/x64/release/bundle/data/flutter_assets/assets
                           echo "ls -l build/linux/x64/release/bundle/data/flutter_assets/assets/icons"
