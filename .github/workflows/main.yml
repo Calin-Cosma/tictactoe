@@ -110,9 +110,6 @@ jobs:
                       if [ "${{ matrix.arch }}" == "x86_64" ]; then
                           flutter build linux --target-platform linux-x64
                           BUILD_DIR="build/linux/x64/release/bundle"
-                      elif [ "${{ matrix.arch }}" == "arm64" ]; then
-                          flutter build linux --target-platform linux-arm64
-                          BUILD_DIR="build/linux/arm64/release/bundle"
                       fi
                   
                       APPIMAGE_DIR="releases/${{ env.APP_VERSION }}"
@@ -188,14 +185,6 @@ jobs:
                   path: |
                       build/windows/x64/runner/Release/${{ env.APP_NAME }}-macos-x86_64-${{ env.APP_VERSION }}.exe
 
-
-            - name: Upload Artifacts (Linux arm64)
-              if: matrix.os == 'ubuntu-latest' && matrix.arch == 'arm64'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: linux-arm64-build-${{ env.APP_VERSION }}
-                  path: |
-                      build/linux/arm64/release/bundle/${{ env.APP_NAME }}-linux-arm64-${{ env.APP_VERSION }}.AppImage
 
             - name: Upload Artifacts (Linux x64)
               id: uploadLinux
