@@ -231,8 +231,8 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - env:
-                appVersion: ${{needs.build.outputs.appVersion}}
-                appVersionWin: ${{needs.build.outputs.appVersionWin}}
+                APP_VERSION_NIX: ${{needs.build.outputs.appVersion}}
+                APP_VERSION_WIN: ${{needs.build.outputs.appVersionWin}}
               run: echo "appVersion=$appVersion ; appVersionWin = $appVersionWin"
 
             - name: Download all artifacts
@@ -248,8 +248,10 @@ jobs:
               env:
                   REPO_URL: "https://github.com/Calin-Cosma/unclone-releases.git"
                   GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
-                  APP_VERSION: ${{ env.APP_VERSION }}
               run: |
+                  echo "+${{ env.APP_VERSION_NIX }}+${{ env.APP_VERSION_WIN }}+"
+                  export APP_VERSION="${{ env.APP_VERSION_NIX }}${{ env.APP_VERSION_WIN }}"
+                  echo "-${APP_VERSION}-"
                   git config --global user.name "github-actions"
                   git config --global user.email "github-actions@github.com"
                   git clone --depth 1 $REPO_URL release_repo
