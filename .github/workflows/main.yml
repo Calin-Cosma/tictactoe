@@ -17,7 +17,7 @@ jobs:
         name: Build
         strategy:
             matrix:
-                os: [windows-latest]
+                os: [macos-latest, windows-latest, ubuntu-latest]
                 arch: [arm64, x86_64]
                 include:
                     - os: macos-latest
@@ -203,7 +203,7 @@ jobs:
               with:
                   name: windows-arm64-build-${{ env.APP_VERSION }}
                   path: |
-                      build/windows/x64/runner/Release/${{ env.APP_NAME }}-macos-arm64-${{ env.APP_VERSION }}.exe
+                      build/windows/x64/runner/Release/${{ env.APP_NAME }}-win-arm64-${{ env.APP_VERSION }}.exe
 
             - name: Upload Artifacts (Windows x64)
               id: uploadWin64
@@ -212,7 +212,7 @@ jobs:
               with:
                   name: windows-x64-build-${{ env.APP_VERSION }}
                   path: |
-                      build/windows/x64/runner/Release/${{ env.APP_NAME }}-macos-x86_64-${{ env.APP_VERSION }}.exe
+                      build/windows/x64/runner/Release/${{ env.APP_NAME }}-win-x86_64-${{ env.APP_VERSION }}.exe
 
 
             - name: Upload Artifacts (Linux x64)
@@ -245,6 +245,7 @@ jobs:
 
             - name: Extract Artifacts
               run: |
+                  
                   mkdir -p extracted_artifacts
                   for artifact in ../*.zip; do
                       unzip -o "$artifact" -d extracted_artifacts/
@@ -265,7 +266,12 @@ jobs:
                   git remote set-url origin https://${{ secrets.RELEASE_PAT }}@github.com/Calin-Cosma/unclone-releases.git
                   git pull origin main --rebase
                   mkdir -p releases/${APP_VERSION}
-                  cp -r extracted_artifacts/* releases/${APP_VERSION}/
+                  cp macos-arm64-build-${{ env.APP_VERSION }}/${{ env.APP_NAME }}-macos-arm64-${{ env.APP_VERSION }}.dmg releases/${APP_VERSION}/
+                  cp macos-x64-build-${{ env.APP_VERSION }}/${{ env.APP_NAME }}-macos-x86_64-${{ env.APP_VERSION }}.dmg releases/${APP_VERSION}/
+                  cp windows-arm64-build-${{ env.APP_VERSION }}/${{ env.APP_NAME }}-win-arm64-${{ env.APP_VERSION }}.exe releases/${APP_VERSION}/
+                  cp windows-x64-build-${{ env.APP_VERSION }}/${{ env.APP_NAME }}-win-x86_64-${{ env.APP_VERSION }}.exe releases/${APP_VERSION}/
+                  cp linux-x64-build-${{ env.APP_VERSION }}/${{ env.APP_NAME }}-linux-x86_64-${{ env.APP_VERSION }}.AppImage releases/${APP_VERSION}/
+                  ls -l releases/
                   git add .
                   git commit -m "Release $APP_VERSION" || echo "No changes to commit"
                   git push origin main
