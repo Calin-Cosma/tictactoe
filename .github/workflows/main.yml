@@ -243,15 +243,6 @@ jobs:
               id: listArtifacts
               run: ls -R
 
-            - name: Extract Artifacts
-              run: |
-                  
-                  mkdir -p extracted_artifacts
-                  for artifact in ../*.zip; do
-                      unzip -o "$artifact" -d extracted_artifacts/
-                  done
-                  ls -l extracted_artifacts/
-
             - name: Copy Artifacts to Public Release Repository
               id: releaseArtifacts
               env:
