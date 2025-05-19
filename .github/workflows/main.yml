@@ -249,8 +249,8 @@ jobs:
                   REPO_URL: "https://github.com/Calin-Cosma/unclone-releases.git"
                   GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
               run: |
-                  echo "+${{ env.APP_VERSION_NIX }}+${{ env.APP_VERSION_WIN }}+"
-                  export APP_VERSION="${{ env.APP_VERSION_NIX }}${{ env.APP_VERSION_WIN }}"
+                  echo "+${APP_VERSION_NIX}+${APP_VERSION_WIN}+"
+                  export APP_VERSION="${APP_VERSION_NIX}${APP_VERSION_WIN}"
                   echo "-${APP_VERSION}-"
                   git config --global user.name "github-actions"
                   git config --global user.email "github-actions@github.com"
