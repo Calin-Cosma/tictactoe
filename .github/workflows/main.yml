@@ -127,8 +127,6 @@ jobs:
                   Icon=app_icon
                   Type=Application
                   Categories=Utility;" > AppDir/${{ env.APP_NAME }}.desktop
-                          cat AppDir/${{ env.APP_NAME }}.desktop
-                          echo "------------------------------"
                           
                           ./appimagetool-x86_64.AppImage AppDir "$APPIMAGE_DIR/$APPIMAGE_FILE"
                       fi
@@ -233,9 +231,7 @@ jobs:
                   APP_VERSION_NIX: ${{needs.build.outputs.appVersionNix}}
                   APP_VERSION_WIN: ${{needs.build.outputs.appVersionWin}}
               run: |
-                  echo "+${APP_VERSION_NIX}+${APP_VERSION_WIN}+"
                   export APP_VERSION="${APP_VERSION_NIX}${APP_VERSION_WIN}"
-                  echo "-${APP_VERSION}-"
                   git config --global user.name "github-actions"
                   git config --global user.email "github-actions@github.com"
                   git clone --depth 1 $REPO_URL release_repo
