@@ -256,11 +256,11 @@ jobs:
                   git remote set-url origin https://${{ secrets.RELEASE_PAT }}@github.com/Calin-Cosma/unclone-releases.git
                   git pull origin main --rebase
                   mkdir -p releases/${APP_VERSION}
-                  cp macos-arm64-build-${APP_VERSION}/${{ env.APP_NAME }}-macos-arm64-${APP_VERSION}.dmg releases/${APP_VERSION}/
-                  cp macos-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-macos-x86_64-${APP_VERSION}.dmg releases/${APP_VERSION}/
-                  cp windows-arm64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-arm64-${APP_VERSION}.exe releases/${APP_VERSION}/
-                  cp windows-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-x86_64-${APP_VERSION}.exe releases/${APP_VERSION}/
-                  cp linux-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-linux-x86_64-${APP_VERSION}.AppImage releases/${APP_VERSION}/
+                  cp ../macos-arm64-build-${APP_VERSION}/${{ env.APP_NAME }}-macos-arm64-${APP_VERSION}.dmg releases/${APP_VERSION}/
+                  cp ../macos-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-macos-x86_64-${APP_VERSION}.dmg releases/${APP_VERSION}/
+                  cp ../windows-arm64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-arm64-${APP_VERSION}.exe releases/${APP_VERSION}/
+                  cp ../windows-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-x86_64-${APP_VERSION}.exe releases/${APP_VERSION}/
+                  cp ../linux-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-linux-x86_64-${APP_VERSION}.AppImage releases/${APP_VERSION}/
                   ls -l releases/
                   git add .
                   git commit -m "Release $APP_VERSION" || echo "No changes to commit"
