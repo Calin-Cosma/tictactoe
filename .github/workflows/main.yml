@@ -159,7 +159,7 @@ jobs:
                   flutter build windows
                   $buildDir = "build/windows/x64/runner/Release"
                   $exeFile = "$buildDir/$env:APP_NAME.exe"
-                  $newFileName = "$buildDir/$env:APP_NAME-win-$env:ARCH-$env:VERSION.exe"
+                  $newFileName = "$buildDir/$env:APP_NAME-win-$env:ARCH-$env:APP_VERSION.exe"
                   
                   echo "dir $buildDir"
                   dir "$buildDir"
@@ -168,7 +168,7 @@ jobs:
     
                   if (Test-Path $exeFile) {
                       echo "Renaming $exeFile to $newFileName"
-                      Rename-Item -Path $exeFile -NewName $newFileName
+                      Copy-Item -Path $exeFile -NewName $newFileName
                       echo "Renamed $exeFile to $newFileName"
                   } else {
                       throw "Executable not found: $exeFile"
