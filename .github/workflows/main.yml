@@ -32,7 +32,7 @@ jobs:
                       arch: x86_64
         runs-on: ${{ matrix.os }}
         outputs:
-            appVersion: ${{ steps.appVersion.outputs.appVersion }}
+            appVersionNix: ${{ steps.appVersionNix.outputs.appVersionNix }}
             appVersionWin: ${{ steps.appVersionWin.outputs.appVersionWin }}
         steps:
             - name: Checkout Code
@@ -51,14 +51,14 @@ jobs:
               run: flutter pub get
 
             - name: Extract App Version (Linux/macOS)
-              id: appVersion
+              id: appVersionNix
               if: matrix.os != 'windows-latest'
               shell: bash
               run: |
                   APP_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //g' | tr -d '\r' | sed 's/+/-/g')
                   echo "App version detected: $APP_VERSION"
                   echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
-                  echo "appVersion=$APP_VERSION" >> "$GITHUB_OUTPUT"
+                  echo "appVersionNix=$APP_VERSION" >> "$GITHUB_OUTPUT"
 
             - name: Extract App Version (Windows)
               id: appVersionWin
@@ -230,11 +230,6 @@ jobs:
         needs: build
         runs-on: ubuntu-latest
         steps:
-            - env:
-                APP_VERSION_NIX: ${{needs.build.outputs.appVersion}}
-                APP_VERSION_WIN: ${{needs.build.outputs.appVersionWin}}
-              run: echo "appVersion=$appVersion ; appVersionWin = $appVersionWin"
-
             - name: Download all artifacts
               id: downloadArtifacts
               uses: actions/download-artifact@v4
@@ -248,6 +243,8 @@ jobs:
               env:
                   REPO_URL: "https://github.com/Calin-Cosma/unclone-releases.git"
                   GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
+                  APP_VERSION_NIX: ${{needs.build.outputs.appVersionNix}}
+                  APP_VERSION_WIN: ${{needs.build.outputs.appVersionWin}}
               run: |
                   echo "+${APP_VERSION_NIX}+${APP_VERSION_WIN}+"
                   export APP_VERSION="${APP_VERSION_NIX}${APP_VERSION_WIN}"
