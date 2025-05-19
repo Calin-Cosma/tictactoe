@@ -168,7 +168,7 @@ jobs:
     
                   if (Test-Path $exeFile) {
                       echo "Renaming $exeFile to $newFileName"
-                      Copy-Item -Path $exeFile -NewName $newFileName
+                      Copy-Item -Path $exeFile -Destination $newFileName
                       echo "Renamed $exeFile to $newFileName"
                   } else {
                       throw "Executable not found: $exeFile"
