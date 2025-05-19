@@ -11,6 +11,7 @@ on:
 
 env:
     APP_NAME: "tictactoe"
+    RELEASES_DIR: "releases"
 
 jobs:
     build:
@@ -88,12 +89,11 @@ jobs:
                       fi
                   
                       BUILD_DIR="build/macos/Build/Products/Release"
-                      DMG_DIR="releases"
                       DMG_FILE="${{ env.APP_NAME }}-macos-${{ env.ARCH }}-${{ env.APP_VERSION }}.dmg"
                   
-                      mkdir -p $DMG_DIR
+                      mkdir -p "${{ env.RELEASES_DIR }}"
                       
-                      hdiutil create -volname "${{ env.APP_NAME }}" -srcfolder "$BUILD_DIR/${{ env.APP_NAME }}.app" -ov -format UDZO "$DMG_DIR/$DMG_FILE"
+                      hdiutil create -volname "${{ env.APP_NAME }}" -srcfolder "$BUILD_DIR/${{ env.APP_NAME }}.app" -ov -format UDZO "${{ env.RELEASES_DIR }}/$DMG_FILE"
                   elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
                       echo "Building for Linux x64"
                       sudo apt update
@@ -111,27 +111,12 @@ jobs:
                           flutter build linux --target-platform linux-x64
                           BUILD_DIR="build/linux/x64/release/bundle"
                   
-                          APPIMAGE_DIR="releases/${{ env.APP_VERSION }}"
+                          APPIMAGE_DIR="${{ env.RELEASES_DIR }}/${{ env.APP_VERSION }}"
                           APPIMAGE_FILE="${{ env.APP_NAME }}-linux-${{ env.ARCH }}-${{ env.APP_VERSION }}.AppImage"
                           
                           mkdir -p $APPIMAGE_DIR
                           wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
                           chmod +x appimagetool-x86_64.AppImage
-                          
-                          echo "ls -l build/linux/x64/release/bundle"
-                          ls -l build/linux/x64/release/bundle
-                          echo "ls -l build/linux/x64/release/bundle/tictactoe"
-                          ls -l build/linux/x64/release/bundle/tictactoe
-                          echo "ls -l build/linux/x64/release/bundle/data"
-                          ls -l build/linux/x64/release/bundle/data
-                          echo "ls -l build/linux/x64/release/bundle/data/flutter_assets"
-                          ls -l build/linux/x64/release/bundle/data/flutter_assets
-                          echo "ls -l build/linux/x64/release/bundle/data/flutter_assets/packages"
-                          ls -l build/linux/x64/release/bundle/data/flutter_assets/packages
-                          echo "ls -l build/linux/x64/release/bundle/data/flutter_assets/assets"
-                          ls -l build/linux/x64/release/bundle/data/flutter_assets/assets
-                          echo "ls -l build/linux/x64/release/bundle/data/flutter_assets/assets/icons"
-                          ls -l build/linux/x64/release/bundle/data/flutter_assets/assets/icons
                           
                           mkdir -p AppDir/usr/bin
                           cp -r $BUILD_DIR/* AppDir/usr/bin/
@@ -154,17 +139,20 @@ jobs:
               if: matrix.os == 'windows-latest'
               env:
                   ARCH: ${{ matrix.arch }}
+              shell: powershell
               run: |
                   Write-Output "Building for Windows $env:ARCH"
                   flutter build windows
                   $buildDir = "build/windows/x64/runner/Release"
                   $exeFile = "$buildDir/$env:APP_NAME.exe"
-                  $newFileName = "$buildDir/$env:APP_NAME-win-$env:ARCH-$env:APP_VERSION.exe"
+                  $newFileName = "${{ env.RELEASES_DIR }}/$env:APP_NAME-win-$env:ARCH-$env:APP_VERSION.exe"
                   
                   echo "dir $buildDir"
                   dir "$buildDir"
                   echo "dir $buildDir/$env:APP_NAME.exe"
                   dir "$buildDir/$env:APP_NAME.exe"
+                  
+                  New-Item -ItemType Directory -Path "${{ env.RELEASES_DIR }}"
     
                   if (Test-Path $exeFile) {
                       echo "Renaming $exeFile to $newFileName"
@@ -173,7 +161,6 @@ jobs:
                   } else {
                       throw "Executable not found: $exeFile"
                   }
-              shell: powershell
 
 
 
@@ -184,7 +171,7 @@ jobs:
               with:
                   name: macos-arm64-build-${{ env.APP_VERSION }}
                   path: |
-                      releases/${{ env.APP_NAME }}-macos-arm64-${{ env.APP_VERSION }}.dmg
+                      ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-macos-arm64-${{ env.APP_VERSION }}.dmg
 
             - name: Upload Artifacts (macOS x64)
               id: uploadMac64
@@ -193,7 +180,7 @@ jobs:
               with:
                   name: macos-x64-build-${{ env.APP_VERSION }}
                   path: |
-                      releases/${{ env.APP_NAME }}-macos-x86_64-${{ env.APP_VERSION }}.dmg
+                      ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-macos-x86_64-${{ env.APP_VERSION }}.dmg
 
 
             - name: Upload Artifacts (Windows arm64)
@@ -203,7 +190,7 @@ jobs:
               with:
                   name: windows-arm64-build-${{ env.APP_VERSION }}
                   path: |
-                      build/windows/x64/runner/Release/${{ env.APP_NAME }}-win-arm64-${{ env.APP_VERSION }}.exe
+                      ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-win-arm64-${{ env.APP_VERSION }}.exe
 
             - name: Upload Artifacts (Windows x64)
               id: uploadWin64
@@ -212,7 +199,7 @@ jobs:
               with:
                   name: windows-x64-build-${{ env.APP_VERSION }}
                   path: |
-                      build/windows/x64/runner/Release/${{ env.APP_NAME }}-win-x86_64-${{ env.APP_VERSION }}.exe
+                      ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-win-x86_64-${{ env.APP_VERSION }}.exe
 
 
             - name: Upload Artifacts (Linux x64)
@@ -222,7 +209,7 @@ jobs:
               with:
                   name: linux-x64-build-${{ env.APP_VERSION }}
                   path: |
-                      build/linux/x64/release/bundle/${{ env.APP_NAME }}-linux-x86_64-${{ env.APP_VERSION }}.AppImage
+                      ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-linux-x86_64-${{ env.APP_VERSION }}.AppImage
                     
 
     release:
@@ -255,13 +242,17 @@ jobs:
                   cd release_repo
                   git remote set-url origin https://${{ secrets.RELEASE_PAT }}@github.com/Calin-Cosma/unclone-releases.git
                   git pull origin main --rebase
-                  mkdir -p releases/${APP_VERSION}
-                  cp ../macos-arm64-build-${APP_VERSION}/${{ env.APP_NAME }}-macos-arm64-${APP_VERSION}.dmg releases/${APP_VERSION}/
-                  cp ../macos-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-macos-x86_64-${APP_VERSION}.dmg releases/${APP_VERSION}/
-                  cp ../windows-arm64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-arm64-${APP_VERSION}.exe releases/${APP_VERSION}/
-                  cp ../windows-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-x86_64-${APP_VERSION}.exe releases/${APP_VERSION}/
-                  cp ../linux-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-linux-x86_64-${APP_VERSION}.AppImage releases/${APP_VERSION}/
-                  ls -l releases/
+                  
+                  VERSION_RELEASES_DIR="${{ env.RELEASES_DIR }}/${APP_VERSION}"
+                  mkdir -p $VERSION_RELEASES_DIR
+                  
+                  cp ../macos-arm64-build-${APP_VERSION}/${{ env.APP_NAME }}-macos-arm64-${APP_VERSION}.dmg $VERSION_RELEASES_DIR/
+                  cp ../macos-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-macos-x86_64-${APP_VERSION}.dmg $VERSION_RELEASES_DIR/
+                  cp ../windows-arm64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-arm64-${APP_VERSION}.exe $VERSION_RELEASES_DIR/
+                  cp ../windows-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-x86_64-${APP_VERSION}.exe $VERSION_RELEASES_DIR/
+                  cp ../linux-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-linux-x86_64-${APP_VERSION}.AppImage $VERSION_RELEASES_DIR/
+                  ls -l ${{ env.RELEASES_DIR }}/
+                  
                   git add .
                   git commit -m "Release $APP_VERSION" || echo "No changes to commit"
                   git push origin main
