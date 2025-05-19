@@ -111,7 +111,7 @@ jobs:
                           flutter build linux --target-platform linux-x64
                           BUILD_DIR="build/linux/x64/release/bundle"
                   
-                          APPIMAGE_DIR="${{ env.RELEASES_DIR }}/${{ env.APP_VERSION }}"
+                          APPIMAGE_DIR="${{ env.RELEASES_DIR }}"
                           APPIMAGE_FILE="${{ env.APP_NAME }}-linux-${{ env.ARCH }}-${{ env.APP_VERSION }}.AppImage"
                           
                           mkdir -p $APPIMAGE_DIR
