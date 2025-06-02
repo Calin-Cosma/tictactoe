@@ -150,6 +150,18 @@ jobs:
                   echo "dir $buildDir/$env:APP_NAME.exe"
                   dir "$buildDir/$env:APP_NAME.exe"
                   
+                  Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "is.exe"
+                  Start-Process -FilePath ".\is.exe" -ArgumentList "/VERYSILENT", "/DIR=C:\InnoSetup" -Wait
+                  
+                  run: 'C:\InnoSetup\ISCC.exe windows\installer\installer.iss'
+                  
+                  echo "dir"
+                  dir
+                  echo "dir $buildDir"
+                  dir "$buildDir"
+                  echo "dir $buildDir/$env:APP_NAME.exe"
+                  dir "$buildDir/$env:APP_NAME.exe"
+                  
                   New-Item -ItemType Directory -Path "${{ env.RELEASES_DIR }}"
     
                   if (Test-Path $exeFile) {

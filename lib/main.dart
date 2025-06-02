@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
 import 'package:tictactoe/game.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 void main() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -74,10 +76,30 @@ class _MyHomePageState extends State<MyHomePage> {
                                                         fontSize: 45, fontWeight: FontWeight.bold),
                                             ),
                                         ),
-                                        Padding(
-                                            padding: EdgeInsets.only(left: 100),
-                                            child: Text('Powered by Flutter'),
+                                        Column(
+                                            children: [
+                                                Text('Powered by Flutter'),
+                                                GestureDetector(
+                                                    onTap: () async {
+                                                        final url = Uri.parse('https://calincosma.com');
+                                                        if (await canLaunchUrl(url)) {
+                                                            await launchUrl(
+                                                                url,
+                                                                mode: LaunchMode.externalApplication,
+                                                            );
+                                                        }
+                                                    },
+                                                    child: Text(
+                                                        'Created by Calin',
+                                                        style: TextStyle(
+                                                            color: Colors.blue,
+                                                            decoration: TextDecoration.underline,
+                                                        ),
+                                                    ),
+                                                ),
+                                            ],
                                         ),
+
                                     ],
                                 ),
                             ],
