@@ -153,7 +153,7 @@ jobs:
                   Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "is.exe"
                   Start-Process -FilePath ".\is.exe" -ArgumentList "/VERYSILENT", "/DIR=C:\InnoSetup" -Wait
                   
-                  run: 'C:\InnoSetup\ISCC.exe windows\installer\installer.iss'
+                  C:\InnoSetup\ISCC.exe windows\installer\installer.iss
                   
                   echo "dir"
                   dir
