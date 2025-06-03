@@ -2,7 +2,7 @@
 AppName=tictactoe
 AppVersion=1.0
 DefaultDirName={pf}\tictactoe
-OutputDir=..\
+OutputDir=..\..
 OutputBaseFilename=tictactoeinstaller
 Compression=lzma
 SolidCompression=yes
