@@ -142,7 +142,7 @@ jobs:
                   Write-Output "Building for Windows $env:ARCH"
                   flutter build windows
                   $buildDir = "build/windows/x64/runner/Release"
-                  $exeFile = "$buildDir/$env:APP_NAMEinstaller.exe"
+                  $exeFile = "$buildDir/$env:APP_NAME" + "installer.exe"
                   $newFileName = "${{ env.RELEASES_DIR }}/$env:APP_NAME-win-$env:ARCH-$env:APP_VERSION.exe"
                   
                   echo "dir $buildDir"
