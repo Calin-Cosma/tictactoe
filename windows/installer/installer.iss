@@ -9,7 +9,7 @@ SolidCompression=yes
 
 [Files]
 ; Navigate up two levels from installer to reach Release folder
-Source: "....\build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: recursesubdirs
+Source: "..\..\build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: recursesubdirs
 
 [Icons]
 Name: "{group}\tictactoe"; Filename: "{app}\tictactoe.exe"
