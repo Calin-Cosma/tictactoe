@@ -21,205 +21,303 @@ jobs:
                 os: [macos-latest, windows-latest, ubuntu-latest]
                 arch: [arm64, x86_64]
                 include:
-                    - os: macos-latest
-                      arch: arm64
-                    - os: macos-latest
-                      arch: x86_64
-                    - os: windows-latest
-                      arch: x86_64
-                    - os: windows-latest
-                      arch: arm64
-                    - os: ubuntu-latest
-                      arch: x86_64
+                    -   os: macos-latest
+                        arch: arm64
+                    -   os: macos-latest
+                        arch: x86_64
+                    -   os: windows-latest
+                        arch: x86_64
+                    -   os: windows-latest
+                        arch: arm64
+                    -   os: ubuntu-latest
+                        arch: x86_64
         runs-on: ${{ matrix.os }}
         outputs:
             appVersionNix: ${{ steps.appVersionNix.outputs.appVersionNix }}
             appVersionWin: ${{ steps.appVersionWin.outputs.appVersionWin }}
         steps:
-            - name: Checkout Code
-              id: checkout
-              uses: actions/checkout@v4
+            -   name: Checkout Code
+                id: checkout
+                uses: actions/checkout@v4
 
-            - name: Set up Flutter
-              id: setupFlutter
-              uses: subosito/flutter-action@v2
-              with:
-                  channel: stable
-                  flutter-version: 3.29.3
+            -   name: Set up Flutter
+                id: setupFlutter
+                uses: subosito/flutter-action@v2
+                with:
+                    channel: stable
+                    flutter-version: 3.29.3
 
-            - name: Install Dependencies
-              id: installDependencies
-              run: flutter pub get
+            -   name: Install Dependencies
+                id: installDependencies
+                run: flutter pub get
 
-            - name: Extract App Version (Linux/macOS)
-              id: appVersionNix
-              if: matrix.os != 'windows-latest'
-              shell: bash
-              run: |
-                  APP_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //g' | tr -d '\r' | sed 's/+/-/g')
-                  echo "App version detected: $APP_VERSION"
-                  echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
-                  echo "appVersionNix=$APP_VERSION" >> "$GITHUB_OUTPUT"
+            -   name: Extract App Version (Linux/macOS)
+                id: appVersionNix
+                if: matrix.os != 'windows-latest'
+                shell: bash
+                run: |
+                    APP_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //g' | tr -d '\r' | sed 's/+/-/g')
+                    echo "App version detected: $APP_VERSION"
+                    echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+                    echo "appVersionNix=$APP_VERSION" >> "$GITHUB_OUTPUT"
 
-            - name: Extract App Version (Windows)
-              id: appVersionWin
-              if: matrix.os == 'windows-latest'
-              shell: powershell
-              run: |
-                  $version = (Get-Content pubspec.yaml | Select-String '^version:' | ForEach-Object { $_ -replace 'version: ', '' } | ForEach-Object { $_ -replace '\+', '-' }).Trim()
-                  echo "App version detected: $version"
-                  echo "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-                  echo "appVersionWin=$version" >> "$GITHUB_OUTPUT"
+            -   name: Extract App Version (Windows)
+                id: appVersionWin
+                if: matrix.os == 'windows-latest'
+                shell: powershell
+                run: |
+                    $version = (Get-Content pubspec.yaml | Select-String '^version:' | ForEach-Object { $_ -replace 'version: ', '' } | ForEach-Object { $_ -replace '\+', '-' }).Trim()
+                    echo "App version detected: $version"
+                    echo "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+                    echo "appVersionWin=$version" >> "$GITHUB_OUTPUT"
 
-            - name: Build Application
-              id: buildMacLinux
-              env:
-                  ARCH: ${{ matrix.arch }}
-              shell: bash
-              run: |
-                  if [ "${{ matrix.os }}" == "macos-latest" ]; then
-                      if [ "${{ matrix.arch }}" == "arm64" ]; then
-                          echo "Building for macOS arm64"
-                          export ARCHFLAGS="-arch arm64"
-                          flutter build macos --dart-define=ARCH=arm64
-                      else
-                          echo "Building for macOS x86_64"
-                          export ARCHFLAGS="-arch x86_64"
-                          flutter build macos --dart-define=ARCH=x86_64
-                      fi
+            -   name: Build Application
+                id: buildMacLinux
+                env:
+                    ARCH: ${{ matrix.arch }}
+                shell: bash
+                run: |
+                    if [ "${{ matrix.os }}" == "macos-latest" ]; then
+                        if [ "${{ matrix.arch }}" == "arm64" ]; then
+                            echo "Building for macOS arm64"
+                            export ARCHFLAGS="-arch arm64"
+                            flutter build macos --dart-define=ARCH=arm64
+                        else
+                            echo "Building for macOS x86_64"
+                            export ARCHFLAGS="-arch x86_64"
+                            flutter build macos --dart-define=ARCH=x86_64
+                        fi
                   
-                      BUILD_DIR="build/macos/Build/Products/Release"
-                      DMG_FILE="${{ env.APP_NAME }}-macos-${{ env.ARCH }}-${{ env.APP_VERSION }}.dmg"
-                  
-                      mkdir -p "${{ env.RELEASES_DIR }}"
+                        BUILD_DIR="build/macos/Build/Products/Release"
+                        DMG_FILE="${{ env.APP_NAME }}-macos-${{ env.ARCH }}-${{ env.APP_VERSION }}.dmg"
+                        
+                        mkdir -p "${{ env.RELEASES_DIR }}"
                       
-                      hdiutil create -volname "${{ env.APP_NAME }}" -srcfolder "$BUILD_DIR/${{ env.APP_NAME }}.app" -ov -format UDZO "${{ env.RELEASES_DIR }}/$DMG_FILE"
-                  elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-                      echo "Building for Linux x64"
-                      sudo apt update
-                      sudo apt install -y \
-                          clang \
-                          cmake \
-                          ninja-build \
-                          pkg-config \
-                          libgtk-3-dev \
-                          libglib2.0-dev \
-                          libsecret-1-dev \
-                          liblzma-dev \
-                          libfuse2
-                      if [ "${{ matrix.arch }}" == "x86_64" ]; then
-                          flutter build linux --target-platform linux-x64
-                          BUILD_DIR="build/linux/x64/release/bundle"
-                  
-                          APPIMAGE_DIR="${{ env.RELEASES_DIR }}"
-                          APPIMAGE_FILE="${{ env.APP_NAME }}-linux-${{ env.ARCH }}-${{ env.APP_VERSION }}.AppImage"
-                          
-                          mkdir -p $APPIMAGE_DIR
-                          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
-                          chmod +x appimagetool-x86_64.AppImage
-                          
-                          mkdir -p AppDir/usr/bin
-                          cp -r $BUILD_DIR/* AppDir/usr/bin/
-                          cp $BUILD_DIR/data/flutter_assets/assets/icons/app_icon.png AppDir/app_icon.png
-                          echo "[Desktop Entry]
-                  Name=${{ env.APP_NAME }}
-                  Exec=${{ env.APP_NAME }}
-                  Icon=app_icon
-                  Type=Application
-                  Categories=Utility;" > AppDir/${{ env.APP_NAME }}.desktop
-                          
-                          ./appimagetool-x86_64.AppImage AppDir "$APPIMAGE_DIR/$APPIMAGE_FILE"
-                      fi
-                  fi
+                        hdiutil create -volname "${{ env.APP_NAME }}" -srcfolder "$BUILD_DIR/${{ env.APP_NAME }}.app" -ov -format UDZO "${{ env.RELEASES_DIR }}/$DMG_FILE"
+                    elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+                        echo "Building for Linux ${{ matrix.arch }}"
+                        sudo apt update
+                        sudo apt install -y \
+                            clang \
+                            cmake \
+                            ninja-build \
+                            pkg-config \
+                            libgtk-3-dev \
+                            libglib2.0-dev \
+                            libsecret-1-dev \
+                            liblzma-dev \
+                            libfuse2 \
+                            rpm \
+                            dpkg-dev
+                        if [ "${{ matrix.arch }}" == "x86_64" ]; then
+                            FLUTTER_TARGET="linux-x64"
+                            DEB_ARCH="amd64"
+                            RPM_ARCH="x86_64"
+                        elif [ "${{ matrix.arch }}" == "arm64" ]; then
+                            FLUTTER_TARGET="linux-arm64"
+                            DEB_ARCH="arm64"
+                            RPM_ARCH="aarch64"
+                        else
+                            echo "Unsupported architecture: ${{ matrix.arch }}"
+                            exit 1
+                        fi
+                            
+                        flutter build linux --target-platform $FLUTTER_TARGET
+                        BUILD_DIR="build/linux/${{ matrix.arch }}/release/bundle"
+                        
+                        PACKAGE_OUT="${{ env.RELEASES_DIR }}"
+                        mkdir -p "$PACKAGE_OUT"
+                        
+                        ### --- Build .deb package ---
+                        DEB_DIR="${{ env.APP_NAME }}_${{ env.APP_VERSION }}_${DEB_ARCH}_deb"
+                        mkdir -p "$DEB_DIR/DEBIAN" "$DEB_DIR/usr/bin" "$DEB_DIR/usr/share/applications" "$DEB_DIR/usr/share/icons/hicolor/256x256/apps"
+                        
+                        cp -r "$BUILD_DIR"/* "$DEB_DIR/usr/bin/"
+                        cp "$BUILD_DIR/data/flutter_assets/assets/icons/app_icon.png" "$DEB_DIR/usr/share/icons/hicolor/256x256/apps/${{ env.APP_NAME }}.png"
+                            
+                        cat <<EOF > "$DEB_DIR/usr/share/applications/${{ env.APP_NAME }}.desktop"
+                    [Desktop Entry]
+                    Name=${{ env.APP_NAME }}
+                    Exec=${{ env.APP_NAME }}
+                    Icon=${{ env.APP_NAME }}
+                    Type=Application
+                    Categories=Utility;
+                    EOF
+                    
+                    cat <<EOF > "$DEB_DIR/DEBIAN/control"
+                    Package: ${{ env.APP_NAME }}
+                    Version: ${{ env.APP_VERSION }}
+                    Section: utils
+                    Priority: optional
+                    Architecture: $DEB_ARCH
+                    Maintainer: Your Name <you@example.com>
+                    Description: ${{ env.APP_NAME }} packaged as a .deb
+                    EOF
+                            
+                        dpkg-deb --build "$DEB_DIR" "$PACKAGE_OUT/${{ env.APP_NAME }}_${{ env.APP_VERSION }}_${DEB_ARCH}.deb"
+                        
+                        ### --- Build .rpm package ---
+                        # Parse version and release from APP_VERSION (e.g., 2.0.0-2)
+                        VERSION="${{ env.APP_VERSION %%-* }}"
+                        RELEASE="${{ env.APP_VERSION##*- }}"
+                        echo "Parsed version: $VERSION"
+                        echo "Parsed release: $RELEASE"
+                        
+                        RPMROOT="$HOME/rpmbuild"
+                        RPM_BUILDROOT="$RPMROOT/BUILDROOT/${{ env.APP_NAME }}-${VERSION}-${RELEASE}.${RPM_ARCH}"
+                        mkdir -p "$RPMROOT"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+                        mkdir -p "$RPM_BUILDROOT/usr/bin" "$RPM_BUILDROOT/usr/share/applications" "$RPM_BUILDROOT/usr/share/icons/hicolor/256x256/apps"
+                        
+                        cp -r "$BUILD_DIR"/* "$RPM_BUILDROOT/usr/bin/"
+                        cp "$BUILD_DIR/data/flutter_assets/assets/icons/app_icon.png" "$RPM_BUILDROOT/usr/share/icons/hicolor/256x256/apps/${{ env.APP_NAME }}.png"
+                        
+                        cat <<EOF > "$RPM_BUILDROOT/usr/share/applications/${{ env.APP_NAME }}.desktop"
+                    [Desktop Entry]
+                    Name=${{ env.APP_NAME }}
+                    Exec=${{ env.APP_NAME }}
+                    Icon=${{ env.APP_NAME }}
+                    Type=Application
+                    Categories=Utility;
+                    EOF
+                        
+                        cat <<EOF > "$RPMROOT/SPECS/${{ env.APP_NAME }}.spec"
+                    Name:           ${{ env.APP_NAME }}
+                    Version:        $VERSION
+                    Release:        $RELEASE
+                    Summary:        ${{ env.APP_NAME }} packaged as an RPM
+                    
+                    License:        MIT
+                    URL:            http://example.com
+                    BuildArch:      $RPM_ARCH
+                    BuildRoot:      %{_topdir}/BUILDROOT/%{name}-%{version}-%{release}.$RPM_ARCH
+                            
+                    %description
+                    ${{ env.APP_NAME }} packaged for RPM-based distributions.
+                    
+                    %prep
+                    
+                    %build
+                    
+                    %install
+                    mkdir -p %{buildroot}/usr
+                    cp -r ${RPM_BUILDROOT}/usr/* %{buildroot}/usr/
+                    
+                    %files
+                    /usr/bin/*
+                    /usr/share/applications/${{ env.APP_NAME }}.desktop
+                    /usr/share/icons/hicolor/256x256/apps/${{ env.APP_NAME }}.png
+                    
+                    %changelog
+                    * Thu Jun 05 2025 Your Name <you@example.com> - $VERSION-$RELEASE
+                    - Initial RPM release
+                    EOF
+                            
+                        rpmbuild --define "_topdir $RPMROOT" -bb "$RPMROOT/SPECS/${{ env.APP_NAME }}.spec"
+                        cp "$RPMROOT/RPMS/$RPM_ARCH/${{ env.APP_NAME }}-${VERSION}-${RELEASE}.$RPM_ARCH.rpm" "$PACKAGE_OUT/"
 
-            - name: Build Application (Windows)
-              id: buildWin
-              if: matrix.os == 'windows-latest'
-              env:
-                  ARCH: ${{ matrix.arch }}
-              shell: powershell
-              run: |
-                  Write-Output "Building for Windows $env:ARCH"
-                  flutter build windows
-                  $buildDir = "build/windows/x64/runner/Release"
-                  $exeFile = "$env:APP_NAME" + "installer.exe"
-                  $newFileName = "${{ env.RELEASES_DIR }}/$env:APP_NAME-win-$env:ARCH-$env:APP_VERSION.exe"
-                  
-                  echo "dir $buildDir"
-                  dir "$buildDir"
-                  echo "dir $buildDir/$env:APP_NAME.exe"
-                  dir "$buildDir/$env:APP_NAME.exe"
-                  
-                  Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "is.exe"
-                  Start-Process -FilePath ".\is.exe" -ArgumentList "/VERYSILENT", "/DIR=C:\InnoSetup" -Wait
-                  
-                  C:\InnoSetup\ISCC.exe windows\installer\installer.iss
-                  
-                  echo "dir"
-                  dir
-                  echo "dir $buildDir"
-                  dir "$buildDir"
-                  echo "dir $buildDir/$env:APP_NAME.exe"
-                  dir "$buildDir/$env:APP_NAME.exe"
-                  
-                  New-Item -ItemType Directory -Path "${{ env.RELEASES_DIR }}"
-    
-                  if (Test-Path $exeFile) {
-                      echo "Renaming $exeFile to $newFileName"
-                      Copy-Item -Path $exeFile -Destination $newFileName
-                      echo "Renamed $exeFile to $newFileName"
-                  } else {
-                      throw "Executable not found: $exeFile"
-                  }
+                    fi
+
+            -   name: Build Application (Windows)
+                id: buildWin
+                if: matrix.os == 'windows-latest'
+                env:
+                    ARCH: ${{ matrix.arch }}
+                shell: powershell
+                run: |
+                    Write-Output "Building for Windows $env:ARCH"
+                    flutter build windows
+                    $buildDir = "build/windows/x64/runner/Release"
+                    $exeFile = "$env:APP_NAME" + "installer.exe"
+                    $newFileName = "${{ env.RELEASES_DIR }}/$env:APP_NAME-win-$env:ARCH-$env:APP_VERSION.exe"
+                    
+                    echo "dir $buildDir"
+                    dir "$buildDir"
+                    echo "dir $buildDir/$env:APP_NAME.exe"
+                    dir "$buildDir/$env:APP_NAME.exe"
+                    
+                    Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "is.exe"
+                    Start-Process -FilePath ".\is.exe" -ArgumentList "/VERYSILENT", "/DIR=C:\InnoSetup" -Wait
+                    
+                    C:\InnoSetup\ISCC.exe windows\installer\installer.iss
+                    
+                    echo "dir"
+                    dir
+                    echo "dir $buildDir"
+                    dir "$buildDir"
+                    echo "dir $buildDir/$env:APP_NAME.exe"
+                    dir "$buildDir/$env:APP_NAME.exe"
+                    
+                    New-Item -ItemType Directory -Path "${{ env.RELEASES_DIR }}"
+                    
+                    if (Test-Path $exeFile) {
+                        echo "Renaming $exeFile to $newFileName"
+                        Copy-Item -Path $exeFile -Destination $newFileName
+                        echo "Renamed $exeFile to $newFileName"
+                    } else {
+                        throw "Executable not found: $exeFile"
+                    }
 
 
 
-            - name: Upload Artifacts (macOS arm64)
-              id: uploadMacArm
-              if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: macos-arm64-build-${{ env.APP_VERSION }}
-                  path: |
-                      ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-macos-arm64-${{ env.APP_VERSION }}.dmg
+            -   name: Upload Artifacts (macOS arm64)
+                id: uploadMacArm
+                if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+                uses: actions/upload-artifact@v4
+                with:
+                    name: macos-arm64-build-${{ env.APP_VERSION }}
+                    path: |
+                        ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-macos-arm64-${{ env.APP_VERSION }}.dmg
 
-            - name: Upload Artifacts (macOS x64)
-              id: uploadMac64
-              if: matrix.os == 'macos-latest' && matrix.arch == 'x86_64'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: macos-x64-build-${{ env.APP_VERSION }}
-                  path: |
-                      ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-macos-x86_64-${{ env.APP_VERSION }}.dmg
-
-
-            - name: Upload Artifacts (Windows arm64)
-              id: uploadWinArm
-              if: matrix.os == 'windows-latest' && matrix.arch == 'arm64'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: windows-arm64-build-${{ env.APP_VERSION }}
-                  path: |
-                      ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-win-arm64-${{ env.APP_VERSION }}.exe
-
-            - name: Upload Artifacts (Windows x64)
-              id: uploadWin64
-              if: matrix.os == 'windows-latest' && matrix.arch == 'x86_64'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: windows-x64-build-${{ env.APP_VERSION }}
-                  path: |
-                      ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-win-x86_64-${{ env.APP_VERSION }}.exe
+            -   name: Upload Artifacts (macOS x64)
+                id: uploadMac64
+                if: matrix.os == 'macos-latest' && matrix.arch == 'x86_64'
+                uses: actions/upload-artifact@v4
+                with:
+                    name: macos-x64-build-${{ env.APP_VERSION }}
+                    path: |
+                        ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-macos-x86_64-${{ env.APP_VERSION }}.dmg
 
 
-            - name: Upload Artifacts (Linux x64)
-              id: uploadLinux
-              if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x86_64'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: linux-x64-build-${{ env.APP_VERSION }}
-                  path: |
-                      ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-linux-x86_64-${{ env.APP_VERSION }}.AppImage
+            -   name: Upload Artifacts (Windows arm64)
+                id: uploadWinArm
+                if: matrix.os == 'windows-latest' && matrix.arch == 'arm64'
+                uses: actions/upload-artifact@v4
+                with:
+                    name: windows-arm64-build-${{ env.APP_VERSION }}
+                    path: |
+                        ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-win-arm64-${{ env.APP_VERSION }}.exe
+
+            -   name: Upload Artifacts (Windows x64)
+                id: uploadWin64
+                if: matrix.os == 'windows-latest' && matrix.arch == 'x86_64'
+                uses: actions/upload-artifact@v4
+                with:
+                    name: windows-x64-build-${{ env.APP_VERSION }}
+                    path: |
+                        ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-win-x86_64-${{ env.APP_VERSION }}.exe
+                        
+
+            -   name: Upload Artifacts (Linux arm64)
+                id: uploadLinuxArm
+                if: matrix.os == 'ubuntu-latest' && matrix.arch == 'arm64'
+                uses: actions/upload-artifact@v4
+                with:
+                    name: linux-arm64-build-${{ env.APP_VERSION }}
+                    path: |
+                        ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}_${{ env.APP_VERSION }}_arm64.deb
+                        ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-${{ env.APP_VERSION }}.aarch64.rpm
+
+
+            -   name: Upload Artifacts (Linux x64)
+                id: uploadLinux64
+                if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x86_64'
+                uses: actions/upload-artifact@v4
+                with:
+                    name: linux-x64-build-${{ env.APP_VERSION }}
+                    path: |
+                        ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}_${{ env.APP_VERSION }}_amd64.deb
+                        ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-${{ env.APP_VERSION }}.x86_64.rpm
+
                     
 
     release:
@@ -227,40 +325,40 @@ jobs:
         needs: build
         runs-on: ubuntu-latest
         steps:
-            - name: Download all artifacts
-              id: downloadArtifacts
-              uses: actions/download-artifact@v4
+            -   name: Download all artifacts
+                id: downloadArtifacts
+                uses: actions/download-artifact@v4
 
-            - name: List artifacts
-              id: listArtifacts
-              run: ls -R
+            -   name: List artifacts
+                id: listArtifacts
+                run: ls -R
 
-            - name: Copy Artifacts to Public Release Repository
-              id: releaseArtifacts
-              env:
-                  REPO_URL: "https://github.com/Calin-Cosma/unclone-releases.git"
-                  GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
-                  APP_VERSION_NIX: ${{needs.build.outputs.appVersionNix}}
-                  APP_VERSION_WIN: ${{needs.build.outputs.appVersionWin}}
-              run: |
-                  export APP_VERSION="${APP_VERSION_NIX}${APP_VERSION_WIN}"
-                  git config --global user.name "github-actions"
-                  git config --global user.email "github-actions@github.com"
-                  git clone --depth 1 $REPO_URL release_repo
-                  cd release_repo
-                  git remote set-url origin https://${{ secrets.RELEASE_PAT }}@github.com/Calin-Cosma/unclone-releases.git
-                  git pull origin main --rebase
-                  
-                  VERSION_RELEASES_DIR="${{ env.RELEASES_DIR }}/${APP_VERSION}"
-                  mkdir -p $VERSION_RELEASES_DIR
-                  
-                  cp ../macos-arm64-build-${APP_VERSION}/${{ env.APP_NAME }}-macos-arm64-${APP_VERSION}.dmg $VERSION_RELEASES_DIR/
-                  cp ../macos-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-macos-x86_64-${APP_VERSION}.dmg $VERSION_RELEASES_DIR/
-                  cp ../windows-arm64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-arm64-${APP_VERSION}.exe $VERSION_RELEASES_DIR/
-                  cp ../windows-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-x86_64-${APP_VERSION}.exe $VERSION_RELEASES_DIR/
-                  cp ../linux-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-linux-x86_64-${APP_VERSION}.AppImage $VERSION_RELEASES_DIR/
-                  ls -l ${{ env.RELEASES_DIR }}/
-                  
-                  git add .
-                  git commit -m "Release $APP_VERSION" || echo "No changes to commit"
-                  git push origin main
+            -   name: Copy Artifacts to Public Release Repository
+                id: releaseArtifacts
+                env:
+                    REPO_URL: "https://github.com/Calin-Cosma/unclone-releases.git"
+                    GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
+                    APP_VERSION_NIX: ${{needs.build.outputs.appVersionNix}}
+                    APP_VERSION_WIN: ${{needs.build.outputs.appVersionWin}}
+                run: |
+                    export APP_VERSION="${APP_VERSION_NIX}${APP_VERSION_WIN}"
+                    git config --global user.name "github-actions"
+                    git config --global user.email "github-actions@github.com"
+                    git clone --depth 1 $REPO_URL release_repo
+                    cd release_repo
+                    git remote set-url origin https://${{ secrets.RELEASE_PAT }}@github.com/Calin-Cosma/unclone-releases.git
+                    git pull origin main --rebase
+                    
+                    VERSION_RELEASES_DIR="${{ env.RELEASES_DIR }}/${APP_VERSION}"
+                    mkdir -p $VERSION_RELEASES_DIR
+                    
+                    cp ../macos-arm64-build-${APP_VERSION}/${{ env.APP_NAME }}-macos-arm64-${APP_VERSION}.dmg $VERSION_RELEASES_DIR/
+                    cp ../macos-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-macos-x86_64-${APP_VERSION}.dmg $VERSION_RELEASES_DIR/
+                    cp ../windows-arm64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-arm64-${APP_VERSION}.exe $VERSION_RELEASES_DIR/
+                    cp ../windows-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-x86_64-${APP_VERSION}.exe $VERSION_RELEASES_DIR/
+                    cp ../linux-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-linux-x86_64-${APP_VERSION}.AppImage $VERSION_RELEASES_DIR/
+                    ls -l ${{ env.RELEASES_DIR }}/
+                    
+                    git add .
+                    git commit -m "Release $APP_VERSION" || echo "No changes to commit"
+                    git push origin main
