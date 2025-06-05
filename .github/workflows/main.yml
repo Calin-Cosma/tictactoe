@@ -158,8 +158,8 @@ jobs:
                         
                         ### --- Build .rpm package ---
                         # Parse version and release from APP_VERSION (e.g., 2.0.0-2)
-                        VERSION="${{ env.APP_VERSION %%-* }}"
-                        RELEASE="${{ env.APP_VERSION##*- }}"
+                        VERSION=$(echo "${{ env.APP_VERSION }}" | cut -d'-' -f1)
+                        RELEASE=$(echo "${{ env.APP_VERSION }}" | cut -d'-' -f2)
                         echo "Parsed version: $VERSION"
                         echo "Parsed release: $RELEASE"
                         
