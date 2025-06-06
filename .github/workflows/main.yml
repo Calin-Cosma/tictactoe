@@ -26,8 +26,10 @@ jobs:
                     -   os: macos-latest
                         arch: x86_64
                     -   os: windows-latest
-                        arch: x86_64
+                        arch: arm64
                     -   os: windows-latest
+                        arch: x86_64
+                    -   os: ubuntu-latest
                         arch: arm64
                     -   os: ubuntu-latest
                         arch: x86_64
