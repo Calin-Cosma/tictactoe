@@ -115,7 +115,6 @@ jobs:
                         RPM_ARCH="x86_64"
                             
                         flutter build linux --target-platform $FLUTTER_TARGET
-#                        BUILD_DIR="build/linux/${{ matrix.arch }}/release/bundle"
                         BUILD_DIR="build/linux/x64/release/bundle"
                         
                         PACKAGE_OUT="${{ env.RELEASES_DIR }}"
