@@ -94,7 +94,7 @@ jobs:
                         mkdir -p "${{ env.RELEASES_DIR }}"
                       
                         hdiutil create -volname "${{ env.APP_NAME }}" -srcfolder "$BUILD_DIR/${{ env.APP_NAME }}.app" -ov -format UDZO "${{ env.RELEASES_DIR }}/$DMG_FILE"
-                    elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+                    elif [ "${{ matrix.os }}" == "ubuntu-latest" ] && [ "${{ matrix.arch }}" == "x86_64" ]; then
                         echo "Building for Linux ${{ matrix.arch }}"
                         sudo apt update
                         sudo apt install -y \
@@ -109,11 +109,10 @@ jobs:
                             libfuse2 \
                             rpm \
                             dpkg-dev
-                        if [ "${{ matrix.arch }}" == "x86_64" ]; then
-                            FLUTTER_TARGET="linux-x64"
-                            DEB_ARCH="amd64"
-                            RPM_ARCH="x86_64"
-                        fi
+                    
+                        FLUTTER_TARGET="linux-x64"
+                        DEB_ARCH="amd64"
+                        RPM_ARCH="x86_64"
                             
                         flutter build linux --target-platform $FLUTTER_TARGET
                         BUILD_DIR="build/linux/${{ matrix.arch }}/release/bundle"
