@@ -191,8 +191,6 @@ jobs:
                     %build
                     
                     %install
-                    mkdir -p %{buildroot}/usr
-                    cp -r ${RPM_BUILDROOT}/usr/* %{buildroot}/usr/
                     
                     %files
                     /usr/bin/*
