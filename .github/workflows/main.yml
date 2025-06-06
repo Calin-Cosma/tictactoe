@@ -30,8 +30,6 @@ jobs:
                     -   os: windows-latest
                         arch: x86_64
                     -   os: ubuntu-latest
-                        arch: arm64
-                    -   os: ubuntu-latest
                         arch: x86_64
         runs-on: ${{ matrix.os }}
         outputs:
@@ -115,13 +113,6 @@ jobs:
                             FLUTTER_TARGET="linux-x64"
                             DEB_ARCH="amd64"
                             RPM_ARCH="x86_64"
-                        elif [ "${{ matrix.arch }}" == "arm64" ]; then
-                            FLUTTER_TARGET="linux-arm64"
-                            DEB_ARCH="arm64"
-                            RPM_ARCH="aarch64"
-                        else
-                            echo "Unsupported architecture: ${{ matrix.arch }}"
-                            exit 1
                         fi
                             
                         flutter build linux --target-platform $FLUTTER_TARGET
@@ -298,17 +289,6 @@ jobs:
                     path: |
                         ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-win-x86_64-${{ env.APP_VERSION }}.exe
                         
-
-            -   name: Upload Artifacts (Linux arm64)
-                id: uploadLinuxArm
-                if: matrix.os == 'ubuntu-latest' && matrix.arch == 'arm64'
-                uses: actions/upload-artifact@v4
-                with:
-                    name: linux-arm64-build-${{ env.APP_VERSION }}
-                    path: |
-                        ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}_${{ env.APP_VERSION }}_arm64.deb
-                        ${{ env.RELEASES_DIR }}/${{ env.APP_NAME }}-${{ env.APP_VERSION }}.aarch64.rpm
-
 
             -   name: Upload Artifacts (Linux x64)
                 id: uploadLinux64
