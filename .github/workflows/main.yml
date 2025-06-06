@@ -356,7 +356,9 @@ jobs:
                     cp ../macos-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-macos-x86_64-${APP_VERSION}.dmg $VERSION_RELEASES_DIR/
                     cp ../windows-arm64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-arm64-${APP_VERSION}.exe $VERSION_RELEASES_DIR/
                     cp ../windows-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-win-x86_64-${APP_VERSION}.exe $VERSION_RELEASES_DIR/
-                    cp ../linux-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-linux-x86_64-${APP_VERSION}.AppImage $VERSION_RELEASES_DIR/
+                    cp ../linux-x64-build-${APP_VERSION}/${{ env.APP_NAME }}_${APP_VERSION}_amd64.deb $VERSION_RELEASES_DIR/
+                    cp ../linux-x64-build-${APP_VERSION}/${{ env.APP_NAME }}-${APP_VERSION}.x86_64.rpm $VERSION_RELEASES_DIR/
+
                     ls -l ${{ env.RELEASES_DIR }}/
                     
                     git add .
