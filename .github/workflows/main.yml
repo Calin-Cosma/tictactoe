@@ -150,20 +150,29 @@ jobs:
                         
                         ### --- Build .rpm package ---
                         # Parse version and release from APP_VERSION (e.g., 2.0.0-2)
+                        ### --- Build .rpm package ---
                         VERSION=$(echo "${{ env.APP_VERSION }}" | cut -d'-' -f1)
                         RELEASE=$(echo "${{ env.APP_VERSION }}" | cut -d'-' -f2)
+                        RPM_ARCH="x86_64"
+                        RPMROOT="$HOME/rpmbuild"
+                        PACKAGE_OUT="${{ env.RELEASES_DIR }}"
+                        
                         echo "Parsed version: $VERSION"
                         echo "Parsed release: $RELEASE"
                         
-                        RPMROOT="$HOME/rpmbuild"
-                        RPM_BUILDROOT="$RPMROOT/BUILDROOT/${{ env.APP_NAME }}-${VERSION}-${RELEASE}.${RPM_ARCH}"
+                        # Setup rpmbuild tree
                         mkdir -p "$RPMROOT"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-                        mkdir -p "$RPM_BUILDROOT/usr/bin" "$RPM_BUILDROOT/usr/share/applications" "$RPM_BUILDROOT/usr/share/icons/hicolor/256x256/apps"
                         
-                        cp -r "$BUILD_DIR"/* "$RPM_BUILDROOT/usr/bin/"
-                        cp "$BUILD_DIR/data/flutter_assets/assets/icons/app_icon.png" "$RPM_BUILDROOT/usr/share/icons/hicolor/256x256/apps/${{ env.APP_NAME }}.png"
+                        # Prepare files into SOURCES (to be copied in %install)
+                        SOURCE_DIR="$RPMROOT/SOURCES"
+                        mkdir -p "$SOURCE_DIR/usr/bin"
+                        mkdir -p "$SOURCE_DIR/usr/share/applications"
+                        mkdir -p "$SOURCE_DIR/usr/share/icons/hicolor/256x256/apps"
                         
-                        cat <<EOF > "$RPM_BUILDROOT/usr/share/applications/${{ env.APP_NAME }}.desktop"
+                        cp -r "$BUILD_DIR"/* "$SOURCE_DIR/usr/bin/"
+                        cp "$BUILD_DIR/data/flutter_assets/assets/icons/app_icon.png" "$SOURCE_DIR/usr/share/icons/hicolor/256x256/apps/${{ env.APP_NAME }}.png"
+                        
+                        cat <<EOF > "$SOURCE_DIR/usr/share/applications/${{ env.APP_NAME }}.desktop"
                     [Desktop Entry]
                     Name=${{ env.APP_NAME }}
                     Exec=${{ env.APP_NAME }}
@@ -172,6 +181,7 @@ jobs:
                     Categories=Utility;
                     EOF
                         
+                        # Create .spec file
                         cat <<EOF > "$RPMROOT/SPECS/${{ env.APP_NAME }}.spec"
                     Name:           ${{ env.APP_NAME }}
                     Version:        $VERSION
@@ -181,8 +191,8 @@ jobs:
                     License:        MIT
                     URL:            http://example.com
                     BuildArch:      $RPM_ARCH
-                    BuildRoot:      %{_topdir}/BUILDROOT/%{name}-%{version}-%{release}.$RPM_ARCH
-                            
+                    BuildRoot:      %{_topdir}/BUILDROOT/%{name}-%{version}-%{release}.%{_arch}
+                    
                     %description
                     ${{ env.APP_NAME }} packaged for RPM-based distributions.
                     
@@ -191,6 +201,13 @@ jobs:
                     %build
                     
                     %install
+                    mkdir -p %{buildroot}/usr/bin
+                    mkdir -p %{buildroot}/usr/share/applications
+                    mkdir -p %{buildroot}/usr/share/icons/hicolor/256x256/apps
+                    
+                    cp -r %{_topdir}/SOURCES/usr/bin/* %{buildroot}/usr/bin/
+                    cp %{_topdir}/SOURCES/usr/share/applications/${{ env.APP_NAME }}.desktop %{buildroot}/usr/share/applications/
+                    cp %{_topdir}/SOURCES/usr/share/icons/hicolor/256x256/apps/${{ env.APP_NAME }}.png %{buildroot}/usr/share/icons/hicolor/256x256/apps/
                     
                     %files
                     /usr/bin/*
@@ -201,9 +218,13 @@ jobs:
                     * Thu Jun 05 2025 Your Name <you@example.com> - $VERSION-$RELEASE
                     - Initial RPM release
                     EOF
-                            
+                        
+                        # Build RPM
                         rpmbuild --define "_topdir $RPMROOT" -bb "$RPMROOT/SPECS/${{ env.APP_NAME }}.spec"
+                        
+                        # Copy to output directory
                         cp "$RPMROOT/RPMS/$RPM_ARCH/${{ env.APP_NAME }}-${VERSION}-${RELEASE}.$RPM_ARCH.rpm" "$PACKAGE_OUT/"
+
 
                     fi
 
